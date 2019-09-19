@@ -15,9 +15,7 @@ check a b = go (prep a) (prep b)
   where prep = id
         go [] _ = []
         go _ [] = []
-        go (x:xs) (y:ys) = pretty_print x y : go xs ys
-        pretty_print x y =
-          show (x == y) ++ ": res " ++ show x ++ " ans " ++ show y
+        go (x:xs) (y:ys) = show (x == y) : go xs ys
 
 testcase :: [Map]
 testcase =

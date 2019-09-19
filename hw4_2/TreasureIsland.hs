@@ -10,10 +10,6 @@ import Data.List
 
 data Treasure = StarBox | NameBox String deriving Eq
 
-instance Show Treasure where
-  show StarBox = "*"
-  show (NameBox s) = s
-
 data Key = Bar | Node Key Key deriving Eq
 
 instance Ord Key where
@@ -22,25 +18,9 @@ instance Ord Key where
   compare _ Bar = GT
   compare (Node k1 k2) (Node k3 k4) = compare k1 k3 <> compare k2 k4
 
-instance Show Key where
-  show Bar = "-"
-  show (Node k1 k2) = "(" ++ show k1 ++ "," ++ show k2 ++ ")"
+data Map = End Treasure | Branch Map Map | Guide String Map deriving Eq
 
-data Map = End Treasure | Branch Map Map | Guide String Map
-  deriving Eq
-
-instance Show Map where
-  show (End t) = show t
-  show (Branch e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
-  show (Guide x e) = show x ++ " -> (" ++ show e ++ ")"
-
-data TypeTerm = Nil | Tip String | Bin TypeTerm TypeTerm
-  deriving Eq
-
-instance Show TypeTerm where
-  show Nil = "*"
-  show (Tip x) = x
-  show (Bin l r) = "(" ++ show l ++ " -> " ++ show r ++ ")"
+data TypeTerm = Nil | Tip String | Bin TypeTerm TypeTerm deriving Eq
 
 type TypeModel = TypeTerm -> TypeTerm
 
@@ -54,7 +34,7 @@ allocEnv = do
   return (Tip x)
 
 addEnv :: String -> TypeTerm -> TypeEnv ()
-addEnv x t = modify (\env -> (x, t) : env)
+addEnv x t = modify ((x, t) :)
 
 substEnv :: TypeModel -> TypeEnv TypeModel
 substEnv s = (modify . fmap . second) s >> return s
@@ -119,12 +99,11 @@ translate subst symtab = go
         go (Branch e e') = go e ++ go e'
         fromTerm :: TypeTerm -> Key
         fromTerm Nil = Bar
-        fromTerm (Tip x) = fromTerm . derive . Tip $ x
+        fromTerm (Tip x) = fromTerm . derive . subst $ (Tip x)
         fromTerm (Bin l r) = Node (fromTerm l) (fromTerm r)
         derive :: TypeTerm -> TypeTerm
-        derive x = case subst x of
-                     Bin l r -> Bin (derive l) (derive r)
-                     _ -> Nil
+        derive (Bin l r) = Bin (derive . subst $ l) (derive . subst $ r)
+        derive _ = Nil
         query :: String -> TypeTerm
         query x = fromJust $ lookup x symtab
 
