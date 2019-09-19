@@ -39,26 +39,29 @@ addEnv x t = modify ((x, t) :)
 substEnv :: TypeModel -> TypeEnv TypeModel
 substEnv s = (modify . fmap . second) s >> return s
 
-unify :: TypeTerm -> TypeTerm -> TypeEnv TypeModel
-unify (Tip x) t | x `notOccurIn` t =
-  return $ (Tip x) `to` t
-    where a `to` b = \x -> if a == x then b else x
-          notOccurIn :: String -> TypeTerm -> Bool
-          notOccurIn x = go
-            where go Nil = True
-                  go (Tip x') = x /= x'
-                  go (Bin l r) = go l && go r
+getReady :: Map -> [Key]
+getReady m = sort . nub . typeCheck $ maybeSubst
+  where (x0, v0, e0) = ("#0", Tip x0, [(x0, v0)])
+        (maybeSubst, symtab) = runState (runMaybeT $ solveM m v0) e0
+        typeCheck :: Maybe TypeModel -> [Key]
+        typeCheck Nothing = []
+        typeCheck (Just subst) = translate subst symtab m
 
-unify t (Tip x) = unify (Tip x) t
-
-unify (Bin l l') (Bin r r') = do
-  s <- unify l r
-  s' <- unify (s l') (s r')
-  return (s' . s)
-
-unify t t' = do
-  guard (t == t')
-  return id
+translate :: TypeModel -> [(String, TypeTerm)] -> Map -> [Key]
+translate subst symtab = go
+  where go (End StarBox) = [Bar]
+        go (End (NameBox x)) = [fromTerm . subst . query $ x]
+        go (Guide _ e) = go e
+        go (Branch e e') = go e ++ go e'
+        fromTerm :: TypeTerm -> Key
+        fromTerm Nil = Bar
+        fromTerm (Tip x) = fromTerm . derive . subst $ (Tip x)
+        fromTerm (Bin l r) = Node (fromTerm l) (fromTerm r)
+        derive :: TypeTerm -> TypeTerm
+        derive (Bin l r) = Bin (derive . subst $ l) (derive . subst $ r)
+        derive _ = Nil
+        query :: String -> TypeTerm
+        query x = fromJust $ lookup x symtab
 
 solveM :: Map -> TypeTerm -> TypeEnv TypeModel
 solveM (End StarBox) t = do
@@ -91,26 +94,23 @@ solveM (Branch e e') t = do
   s' <- solveM e' (s v)
   substEnv (s' . s)
 
-translate :: TypeModel -> [(String, TypeTerm)] -> Map -> [Key]
-translate subst symtab = go
-  where go (End StarBox) = [Bar]
-        go (End (NameBox x)) = [fromTerm . subst . query $ x]
-        go (Guide _ e) = go e
-        go (Branch e e') = go e ++ go e'
-        fromTerm :: TypeTerm -> Key
-        fromTerm Nil = Bar
-        fromTerm (Tip x) = fromTerm . derive . subst $ (Tip x)
-        fromTerm (Bin l r) = Node (fromTerm l) (fromTerm r)
-        derive :: TypeTerm -> TypeTerm
-        derive (Bin l r) = Bin (derive . subst $ l) (derive . subst $ r)
-        derive _ = Nil
-        query :: String -> TypeTerm
-        query x = fromJust $ lookup x symtab
+unify :: TypeTerm -> TypeTerm -> TypeEnv TypeModel
+unify (Tip x) t | x `notOccurIn` t =
+  return $ (Tip x) `to` t
+    where a `to` b = \x -> if a == x then b else x
+          notOccurIn :: String -> TypeTerm -> Bool
+          notOccurIn x = go
+            where go Nil = True
+                  go (Tip x') = x /= x'
+                  go (Bin l r) = go l && go r
 
-getReady :: Map -> [Key]
-getReady m = sort . nub . typeCheck $ maybeSubst
-  where (x0, v0, e0) = ("#0", Tip x0, [(x0, v0)])
-        (maybeSubst, symtab) = runState (runMaybeT $ solveM m v0) e0
-        typeCheck :: Maybe TypeModel -> [Key]
-        typeCheck Nothing = []
-        typeCheck (Just subst) = translate subst symtab m
+unify t (Tip x) = unify (Tip x) t
+
+unify (Bin l l') (Bin r r') = do
+  s <- unify l r
+  s' <- unify (s l') (s r')
+  return (s' . s)
+
+unify t t' = do
+  guard (t == t')
+  return id
