@@ -3,6 +3,7 @@ module TreasureIsland ( Treasure(..), Key(..), Map(..), getReady ) where
 import Control.Monad.State
 import Control.Monad.Trans.Maybe
 import Data.Bifunctor
+import Data.Bool
 import Data.Functor
 import Data.Maybe
 import Data.Monoid
@@ -30,7 +31,7 @@ allocEnv :: TypeEnv TypeTerm
 allocEnv = do
   env <- get
   let x = '#' : show (length env)
-  modify (\env -> (x, Tip x) : env)
+  modify (\s -> (x, Tip x) : s)
   return (Tip x)
 
 addEnv :: String -> TypeTerm -> TypeEnv ()
@@ -96,13 +97,11 @@ solveM (Branch e e') t = do
 
 unify :: TypeTerm -> TypeTerm -> TypeEnv TypeModel
 unify (Tip x) t | x `notOccurIn` t =
-  return $ (Tip x) `to` t
-    where a `to` b = \x -> if a == x then b else x
-          notOccurIn :: String -> TypeTerm -> Bool
-          notOccurIn x = go
-            where go Nil = True
-                  go (Tip x') = x /= x'
-                  go (Bin l r) = go l && go r
+    return $ \v -> bool v t (Tip x == v)
+    where notOccurIn :: String -> TypeTerm -> Bool
+          notOccurIn _ Nil = True
+          notOccurIn x (Tip y) = x /= y
+          notOccurIn x (Bin l r) = notOccurIn x l && notOccurIn x r
 
 unify t (Tip x) = unify (Tip x) t
 
