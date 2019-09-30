@@ -19,10 +19,10 @@ data ID = A | B | C | D | E deriving (Eq, Ord, Enum, Show)
 
 shoppingList :: [Require] -> [(ID, [Gift])]
 shoppingList reqs = transit startPoint
-  where startPoint = [A .. E] `zip` repeat []
+  where startPoint = [(k, []) | k <- [A .. E]]
         condMap = [(k, v) | Req {getID = k, getCondList = v} <- reqs]
         transit prev = if prev == next then next else transit next
-          where next = (\k -> (k, go $ lookup k condMap)) <$> [A .. E]
+          where next = [(k, v) | k <- [A .. E], let v = go $ lookup k condMap]
                 go Nothing = []
                 go (Just conds) = sort . nub . concat $ query prev <$> conds
 
