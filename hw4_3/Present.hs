@@ -8,21 +8,17 @@ import Debug.Trace
 
 data Require = Req { getID :: ID, getCondList :: [Cond] }
 
-data Cond = Items [Gift]
-          | Same ID
-          | Common Cond Cond
-          | Except Cond [Gift]
+data Cond = Items [Gift] | Same ID | Common Cond Cond | Except Cond [Gift]
 
 type Gift = Int
 
 data ID = A | B | C | D | E deriving (Eq, Ord, Enum, Show)
 
 shoppingList :: [Require] -> [(ID, [Gift])]
-shoppingList reqs = transit startPoint
-  where startPoint = [(k, []) | k <- [A .. E]]
-        condMap = [(k, v) | Req {getID = k, getCondList = v} <- reqs]
-        transit prev = if prev == next then next else transit next
-          where next = [(k, v) | k <- [A .. E], let v = go $ lookup k condMap]
+shoppingList reqs = progress [(k, []) | k <- [A .. E]]
+  where condFromID k = lookup k [(k, v) | Req {getID = k, getCondList = v} <- reqs]
+        progress prev = if prev == next then next else progress next
+          where next = [(k, v) | k <- [A .. E], let v = go $ condFromID k]
                 go Nothing = []
                 go (Just conds) = sort . nub . concat $ query prev <$> conds
 
