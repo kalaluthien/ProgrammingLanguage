@@ -1,6 +1,8 @@
 module Main ( main ) where
 
-import KminusParser
+import Kminus
 
 main :: IO ()
-main = parseFile "./example.k-" >>= print
+main = do
+  program <- parseFile "./example.k-"
+  print program

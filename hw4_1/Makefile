@@ -1,6 +1,6 @@
 HSC = ghc
 TRG = kminus_parser
-SRCS = main.hs KminusParser.hs
+SRCS = main.hs Kminus.hs
 MAIN = main.hs
 
 $(TRG) : $(SRCS)
