@@ -1,0 +1,8 @@
+(* comment *)
+
+let x := 10 in
+let proc inc ( n ) = x := x + n in let x := 0 in
+( {}; inc (1) ;write x); {v1:=0,v2:= -1}.v1 := x
+
+(* comment *)
+
