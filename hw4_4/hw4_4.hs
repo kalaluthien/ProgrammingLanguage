@@ -7,8 +7,7 @@ import Data.List
 import TreasureIsland
 
 main :: IO ()
-main = do
-  putStr . unlines $ check result answer
+main = putStr . unlines $ check result answer
 
 check :: [[Key]] -> [[Key]] -> [String]
 check a b = go (prep a) (prep b)
