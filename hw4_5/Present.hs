@@ -16,7 +16,8 @@ data ID = A | B | C | D | E deriving (Eq, Ord, Enum, Show)
 
 shoppingList :: [Require] -> [(ID, [Gift])]
 shoppingList reqs = progress [(k, []) | k <- [A .. E]]
-  where condFromID k = lookup k [(k, v) | Req {getID = k, getCondList = v} <- reqs]
+  where condFromID k =
+          lookup k [(k, v) | Req {getID = k, getCondList = v} <- reqs]
         progress prev = if prev == next then next else progress next
           where next = [(k, v) | k <- [A .. E], let v = go $ condFromID k]
                 go Nothing = []
