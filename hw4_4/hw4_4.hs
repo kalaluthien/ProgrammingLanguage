@@ -34,6 +34,8 @@ testcase =
      , Branch (Branch (nBox "y") sBox) (Guide "x" (Branch (nBox "x") sBox))
      , Branch (nBox "z") (Guide "x" (Branch (Guide "y" (Branch (nBox "x") (nBox "y"))) sBox))
      , Branch (Guide "c"  (Branch (Branch (Guide "a" (Branch (nBox "a") (nBox "b"))) (Branch (nBox "b") (nBox "a"))) (nBox "c"))) sBox
+     , Guide "x" (Guide "z" (Guide "y" (Branch (Branch (Branch (nBox "x") (nBox "y")) (Branch (nBox "z") (nBox "y"))) (Branch (Branch (nBox "x") (nBox "y")) (Branch (nBox "z") (nBox "y"))))))
+     , Branch (Guide "x" (Guide "y" (Guide "z" (Guide "w" (Branch (Branch (nBox "x") (nBox "y")) (Branch (nBox "z") (nBox "w"))))))) (Guide "a" (Branch (nBox "a") (nBox "b")))
      ]
 
 answer :: [[Key]]
@@ -50,6 +52,8 @@ answer = fmap sort
          , [Bar, Node Bar Bar, Node Bar (Node (Node (Node Bar Bar) Bar) Bar)]
          , [Bar, Node Bar Bar, Node (Node (Node Bar Bar) Bar) Bar]
          , []
+         , []
+         , [Bar, Node Bar Bar, Node Bar (Node Bar Bar), Node (Node Bar (Node Bar Bar)) (Node Bar Bar)]
          ]
 
 result :: [[Key]]

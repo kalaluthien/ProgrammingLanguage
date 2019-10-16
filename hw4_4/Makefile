@@ -1,7 +1,7 @@
 HSC = ghc
 TRG = treasure_island
-SRCS = hw4_2.hs TreasureIsland.hs
-MAIN = hw4_2.hs
+SRCS = hw4_4.hs TreasureIsland.hs
+MAIN = hw4_4.hs
 
 $(TRG) : $(SRCS)
 	$(HSC) $(MAIN) --make -o $@
